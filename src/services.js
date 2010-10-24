@@ -231,7 +231,9 @@ angularServiceInject("$log", function($window){
     log: bind(console, log),
     warn: bind(console, console.warn || log),
     info: bind(console, console.info || log),
-    error: bind(console, console.error || log)
+    error: function(e){
+      console.error(e && (e.stack || e.message + '\n' + e.sourceURL + ':' + e.line || e));
+    }
   };
 }, ['$window'], EAGER_PUBLISHED);
 

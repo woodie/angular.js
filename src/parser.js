@@ -67,10 +67,10 @@ function lex(text, parseStringsForObjects){
         tokens.push({index:index, text:ch, fn:fn, json: was('[,:') && is('+-')});
         index += 1;
       } else {
-        throw "Lexer Error: Unexpected next character [" +
+        throw new Error("Lexer Error: Unexpected next character [" +
             text.substring(index) +
             "] in expression '" + text +
-            "' at column '" + (index+1) + "'.";
+            "' at column '" + (index+1) + "'.");
       }
     }
     lastCh = ch;
@@ -121,7 +121,7 @@ function lex(text, parseStringsForObjects){
         } else if (isExpOperator(ch) &&
             (!peekCh || !isNumber(peekCh)) &&
             number.charAt(number.length - 1) == 'e') {
-          throw 'Lexer found invalid exponential value "' + text + '"';
+          throw new Error('Lexer found invalid exponential value "' + text + '"');
         } else {
           break;
         }
@@ -165,9 +165,9 @@ function lex(text, parseStringsForObjects){
         if (ch == 'u') {
           var hex = text.substring(index + 1, index + 5);
           if (!hex.match(/[\da-f]{4}/i))
-            throw "Lexer Error: Invalid unicode escape [\\u" +
+            throw new Error("Lexer Error: Invalid unicode escape [\\u" +
               hex + "] starting at column '" +
-              start + "' in expression '" + text + "'.";
+              start + "' in expression '" + text + "'.");
           index += 4;
           string += String.fromCharCode(parseInt(hex, 16));
         } else {
@@ -194,9 +194,9 @@ function lex(text, parseStringsForObjects){
       }
       index++;
     }
-    throw "Lexer Error: Unterminated quote [" +
+    throw new Error("Lexer Error: Unterminated quote [" +
         text.substring(start) + "] starting at column '" +
-        (start+1) + "' in expression '" + text + "'.";
+        (start+1) + "' in expression '" + text + "'.");
   }
   function readRegexp(quote) {
     var start = index;
@@ -227,9 +227,9 @@ function lex(text, parseStringsForObjects){
       }
       index++;
     }
-    throw "Lexer Error: Unterminated RegExp [" +
+    throw new Error("Lexer Error: Unterminated RegExp [" +
         text.substring(start) + "] starting at column '" +
-        (start+1) + "' in expression '" + text + "'.";
+        (start+1) + "' in expression '" + text + "'.");
   }
 }
 
@@ -251,15 +251,15 @@ function parser(text, json){
   ///////////////////////////////////
 
   function error(msg, token) {
-    throw "Token '" + token.text +
+    throw new Error("Token '" + token.text +
       "' is " + msg + " at column='" +
       (token.index + 1) + "' of expression '" +
-      text + "' starting at '" + text.substring(token.index) + "'.";
+      text + "' starting at '" + text.substring(token.index) + "'.");
   }
 
   function peekToken() {
     if (tokens.length === 0)
-      throw "Unexpected end of expression: " + text;
+      throw new Error("Unexpected end of expression: " + text);
     return tokens[0];
   }
 
@@ -280,10 +280,10 @@ function parser(text, json){
     if (token) {
       if (json && !token.json) {
         index = token.index;
-        throw "Expression at column='" +
+        throw new Error("Expression at column='" +
           token.index + "' of expression '" +
           text + "' starting at '" + text.substring(token.index) +
-          "' is not valid json.";
+          "' is not valid json.");
       }
       tokens.shift();
       this.currentToken = token;
@@ -295,10 +295,10 @@ function parser(text, json){
   function consume(e1){
     if (!expect(e1)) {
       var token = peek();
-      throw "Expecting '" + e1 + "' at column '" +
+      throw new Error("Expecting '" + e1 + "' at column '" +
           (token.index+1) + "' in '" +
           text + "' got '" +
-          text.substring(token.index) + "'.";
+          text.substring(token.index) + "'.");
     }
   }
 
@@ -320,8 +320,8 @@ function parser(text, json){
 
   function assertAllConsumed(){
     if (tokens.length !== 0) {
-      throw "Did not understand '" + text.substring(tokens[0].index) +
-          "' while evaluating '" + text + "'.";
+      throw new Error("Did not understand '" + text.substring(tokens[0].index) +
+          "' while evaluating '" + text + "'.");
     }
   }
 
@@ -406,9 +406,9 @@ function parser(text, json){
     var token;
     if (token = expect('=')) {
       if (!left.isAssignable) {
-        throw "Left hand side '" +
+        throw new Error("Left hand side '" +
         text.substring(0, token.index) + "' of assignment '" +
-        text.substring(token.index) + "' is not assignable.";
+        text.substring(token.index) + "' is not assignable.");
       }
       var ident = function(){return left.isAssignable;};
       return binaryFn(ident, token.fn, logicalOR());

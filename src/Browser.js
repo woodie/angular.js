@@ -10,20 +10,31 @@ var XHR = window.XMLHttpRequest || function () {
 
 function Browser(location, document, head, XHR, $log) {
   var self = this;
-  self.isMock = false;
-
-  //////////////////////////////////////////////////////////////
-  // XHR API
-  //////////////////////////////////////////////////////////////
   var idCounter = 0;
   var outstandingRequestCount = 0;
   var outstandingRequestCallbacks = [];
+  function incrementRequestCount(){
+    outstandingRequestCount ++;
+  };
+  function decrementRequestCount(){
+    outstandingRequestCount--;
+    if (outstandingRequestCount === 0) {
+      while(outstandingRequestCallbacks.length) {
+        try {
+          outstandingRequestCallbacks.pop()();
+        } catch (e) {
+        }
+      }
+    }
+  };
 
+  self.isMock = false;
   self.xhr = function(method, url, post, callback){
     if (isFunction(post)) {
       callback = post;
       post = _null;
     }
+    incrementRequestCount();
     if (lowercase(method) == 'json') {
       var callbackId = "angular_" + Math.random() + '_' + (idCounter++);
       callbackId = callbackId.replace(/\d\./, '');
@@ -32,7 +43,11 @@ function Browser(location, document, head, XHR, $log) {
       script.src = url.replace('JSON_CALLBACK', callbackId);
       window[callbackId] = function(data){
         window[callbackId] = _undefined;
-        callback(200, data);
+        try {
+          callback(200, data);
+        } finally {
+          decrementRequestCount();
+        }
       };
       head.append(script);
     } else {
@@ -41,21 +56,12 @@ function Browser(location, document, head, XHR, $log) {
       xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
       xhr.setRequestHeader("Accept", "application/json, text/plain, */*");
       xhr.setRequestHeader("X-Requested-With", "XMLHttpRequest");
-      outstandingRequestCount ++;
       xhr.onreadystatechange = function() {
         if (xhr.readyState == 4) {
           try {
             callback(xhr.status || 200, xhr.responseText);
           } finally {
-            outstandingRequestCount--;
-            if (outstandingRequestCount === 0) {
-              while(outstandingRequestCallbacks.length) {
-                try {
-                  outstandingRequestCallbacks.pop()();
-                } catch (e) {
-                }
-              }
-            }
+            decrementRequestCount();
           }
         }
       };
