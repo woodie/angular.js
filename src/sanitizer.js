@@ -81,8 +81,7 @@ function htmlParser( html, handler ) {
         index = html.indexOf("-->");
 
         if ( index >= 0 ) {
-          if ( handler.comment )
-            handler.comment( html.substring( 4, index ) );
+          if (handler.comment) handler.comment( html.substring( 4, index ) );
           html = html.substring( index + 3 );
           chars = false;
         }
@@ -114,7 +113,7 @@ function htmlParser( html, handler ) {
         var text = index < 0 ? html : html.substring( 0, index );
         html = index < 0 ? "" : html.substring( index );
 
-        handler.chars( decodeEntities(text) );
+        if (handler.chars) handler.chars( decodeEntities(text) );
       }
 
     } else {
@@ -123,7 +122,7 @@ function htmlParser( html, handler ) {
           replace(COMMENT_REGEXP, "$1").
           replace(CDATA_REGEXP, "$1");
 
-        handler.chars( decodeEntities(text) );
+        if (handler.chars) handler.chars( decodeEntities(text) );
 
         return "";
       });
@@ -167,8 +166,7 @@ function htmlParser( html, handler ) {
 
       attrs[name] = decodeEntities(value); //value.replace(/(^|[^\\])"/g, '$1\\\"') //"
     });
-
-    handler.start( tagName, attrs, unary );
+    if (handler.start) handler.start( tagName, attrs, unary );
   }
 
   function parseEndTag( tag, tagName ) {
@@ -183,7 +181,7 @@ function htmlParser( html, handler ) {
     if ( pos >= 0 ) {
       // Close all the open elements, up the stack
       for ( i = stack.length - 1; i >= pos; i-- )
-        handler.end( stack[ i ] );
+        if (handler.end) handler.end( stack[ i ] );
 
       // Remove the open elements from the stack
       stack.length = pos;
