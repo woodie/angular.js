@@ -9,7 +9,7 @@ function DocsController($location, $browser, $window) {
     $location.hashPath = '!/api';
   }
 
-  this.$watch('$location.hashPath', function(hashPath) {
+  this.$watch('$location.hashPath', function(scope, hashPath) {
     if (hashPath.match(/^!/)) {
       var parts = hashPath.substring(1).split('/');
       self.sectionId = parts[1];
@@ -17,7 +17,7 @@ function DocsController($location, $browser, $window) {
       self.pages = angular.Array.filter(NG_PAGES, {section:self.sectionId});
       self.partialTitle = (angular.Array.filter(self.pages, function(doc){return doc.id == self.partialId;})[0]||{}).name || 'Error: Page Not Found!';
     }
-  });
+  })();
 
   this.getUrl = function(page){
     return '#!/' + page.section + '/' + page.id;

@@ -54,7 +54,6 @@ function fromCharCode(code) { return String.fromCharCode(code); }
 
 var _undefined        = undefined,
     _null             = null,
-    $$element         = '$element',
     $$scope           = '$scope',
     $$validate        = '$validate',
     $angular          = 'angular',
@@ -63,7 +62,6 @@ var _undefined        = undefined,
     $console          = 'console',
     $date             = 'date',
     $display          = 'display',
-    $element          = 'element',
     $function         = 'function',
     $length           = 'length',
     $name             = 'name',
@@ -573,6 +571,16 @@ function isLeafNode (node) {
 }
 
 /**
+ * @workInProgress
+ * @ngdoc function
+ * @name angular.copy
+ * @function
+ *
+ * @description
+ * Alias for {@link angular.Object.copy}
+ */
+
+/**
  * @ngdoc function
  * @name angular.Object.copy
  * @function
@@ -656,6 +664,15 @@ function copy(source, destination){
   return destination;
 }
 
+/**
+ * @workInProgress
+ * @ngdoc function
+ * @name angular.equals
+ * @function
+ *
+ * @description
+ * Alias for {@link angular.Object.equals}
+ */
 
 /**
  * @ngdoc function
@@ -665,8 +682,8 @@ function copy(source, destination){
  * @description
  * Determines if two objects or value are equivalent.
  *
- * To be equivalent, they must pass `==` comparison or be of the same type and have all their
- * properties pass `==` comparison. During property comparision properties of `function` type and
+ * To be equivalent, they must pass `===` comparison or be of the same type and have all their
+ * properties pass `===` comparison. During property comparision properties of `function` type and
  * properties with name starting with `$` are ignored.
  *
  * Supports values types, arrays and objects.
@@ -706,7 +723,7 @@ function copy(source, destination){
  * </doc:example>
  */
 function equals(o1, o2) {
-  if (o1 == o2) return true;
+  if (o1 === o2) return true;
   if (o1 === null || o2 === null) return false;
   var t1 = typeof o1, t2 = typeof o2, length, key, keySet;
   if (t1 == t2 && t1 == 'object') {
@@ -778,6 +795,10 @@ function concat(array1, array2, index) {
   return array1.concat(slice.call(array2, index, array2.length));
 }
 
+function sliceArgs(args, startIndex) {
+  return slice.call(args, startIndex || 0, args.length);
+}
+
 
 /**
  * @workInProgress
@@ -797,7 +818,7 @@ function concat(array1, array2, index) {
  */
 function bind(self, fn) {
   var curryArgs = arguments.length > 2
-    ? slice.call(arguments, 2, arguments.length)
+    ? sliceArgs(arguments, 2)
     : [];
   if (typeof fn == $function && !(fn instanceof RegExp)) {
     return curryArgs.length
@@ -938,13 +959,14 @@ function angularInit(config, document){
 
   if (autobind) {
     var element = isString(autobind) ? document.getElementById(autobind) : document,
-        scope = compile(element)(createScope({'$config':config})),
+        scope = compile(element)(createScope()),
         $browser = scope.$service('$browser');
 
     if (config.css)
       $browser.addCss(config.base_url + config.css);
     else if(msie<8)
       $browser.addJs(config.base_url + config.ie_compat, config.ie_compat_id);
+    scope.$apply();
   }
 }
 
@@ -1000,5 +1022,6 @@ function assertArg(arg, name, reason) {
 }
 
 function assertArgFn(arg, name) {
-  assertArg(isFunction(arg, name, 'not a function'));
-}
+  assertArg(isFunction(arg), name, 'not a function, got  ' +
+      (typeof arg == 'object' ? arg.constructor.name : typeof arg));
+};
